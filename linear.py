@@ -1,13 +1,15 @@
 import numpy as np
 import argparse as ap
 from sklearn import linear_model as lm
-from sklearn.preprocessing import PolynomialFeatures
+# from sklearn.preprocessing import PolynomialFeatures
+import time
 
 # def a(trainfile, testfile, outputfile, weightfile):
 def a(ns):
     M = np.loadtxt(ns.trainfile, delimiter=",")
     X = M[:,:-1]
-    X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+    # X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+    X = np.append(np.ones((X.shape[0], 1)), X, axis=1)
     Y = M[:,-1:]
     # TODO: check is saving transpose slower
     Xt = X.T
@@ -15,14 +17,15 @@ def a(ns):
     np.savetxt(ns.weightfile, W, delimiter=",")
 
     X1 = np.loadtxt(ns.testfile, delimiter=",")
-    X1 = np.append(X1, np.ones((X1.shape[0], 1)), axis=1)
+    X1 = np.append(np.ones((X1.shape[0], 1)), X1, axis=1)
     Y1 = X1 @ W
     np.savetxt(ns.outputfile, Y1, delimiter=",")
 
 def b(ns):
     M = np.loadtxt(ns.trainfile, delimiter=",")
     X = M[:,:-1]
-    X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+    # X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+    X = np.append(np.ones((X.shape[0], 1)), X, axis=1)
     Y = M[:,-1:]
 
     # load lambdas
@@ -69,26 +72,32 @@ def b(ns):
     np.savetxt(ns.weightfile, W, delimiter=",")
         
     X1 = np.loadtxt(ns.testfile, delimiter=",")
-    X1 = np.append(X1, np.ones((X1.shape[0], 1)), axis=1)
+    X1 = np.append(np.ones((X1.shape[0], 1)), X1, axis=1)
     Y1 = X1 @ W
     np.savetxt(ns.outputfile, Y1, delimiter=",")
 
 def c(ns):
     M = np.loadtxt(ns.trainfile, delimiter=",")
     X = M[:,:-1]
-    poly = PolynomialFeatures(2)
-    X = poly.fit_transform(X)
-    # X = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+    X = np.append(np.ones((X.shape[0], 1)), X, axis=1)
     Y = M[:,-1:]
+    # st = time.time()
+    # poly = PolynomialFeatures(2)
+    # X = poly.fit_transform(X)
+    # print("PF time: ", time.time()-st)
+    # print("X ", X.shape)
     lambdas = [1.0e-03, 3.0e-03, 1.0e-02, 3.0e-02, 1.0e-01, 3.0e-01, 1.0e+00, 3.0e+00, 1.0e+01,3.0e+01, 1.0e+02, 3.0e+02, 1.0e+03]
+    # lambdas = [1.0e-03]
 
     min_err = float('Inf')
     min_lambda = 0
     for i in range(len(lambdas)):
         reg = lm.LassoLars(alpha=lambdas[i])
+        # st = time.time()
         # k fold cross validation
         err = 0.0
         for j in range(10):
+            # print("starting i: ", i, "j: ", j)
             # training set
             Xtk = np.append(X[0:int((j/10)*X.shape[0]),:], X[int(((j+1)/10)*X.shape[0]):,:], axis=0)
             Ytk = np.append(Y[0:int((j/10)*Y.shape[0]),:], Y[int(((j+1)/10)*Y.shape[0]):,:], axis=0)
@@ -107,12 +116,13 @@ def c(ns):
             # err += (1/(2*Xvk.shape[0]))*np.linalg.norm(Yvk - (Xvk @ W))
 
         err = err/10
-        print("lambda: ", lambdas[i], "error: ", err)
+        # print("lambda: ", lambdas[i], "error: ", err)
         if (err<=min_err):
             min_err = err
             min_lambda = lambdas[i]
+        # print("lambda selection: ", time.time()-st)
 
-    print(min_lambda)
+    # print(min_lambda)
     
     reg = lm.LassoLars(alpha=min_lambda)
     reg.fit(X, Y.ravel())
@@ -120,11 +130,9 @@ def c(ns):
     # np.savetxt(ns.weightfile, W, delimiter=",")
         
     X1 = np.loadtxt(ns.testfile, delimiter=",")
-    X1 = np.append(X1, np.ones((X1.shape[0], 1)), axis=1)
+    X1 = np.append(np.ones((X1.shape[0], 1)), X1, axis=1)
     Y1 = X1 @ W
     np.savetxt(ns.outputfile, Y1, delimiter=",")
-
-
 
 
 if __name__ == "__main__":
@@ -148,6 +156,7 @@ if __name__ == "__main__":
     p_b.add_argument('weightfile', type=str)
     p_b.set_defaults(func=b)
 
+    # python linear.py c train.csv test_X.csv outputfile
     # python linear.py c trainfile.csv testfile.csv outputfile.txt
     p_c = sp.add_parser('c')
     p_c.add_argument('trainfile', type=str)
@@ -157,5 +166,3 @@ if __name__ == "__main__":
 
     args = p.parse_args()
     args.func(args)
-
-    
