@@ -2,7 +2,7 @@ import numpy as np
 import argparse as ap
 from sklearn import linear_model as lm
 # from sklearn.preprocessing import PolynomialFeatures
-import time
+# import time
 
 # def a(trainfile, testfile, outputfile, weightfile):
 def a(ns):
