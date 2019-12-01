@@ -2,7 +2,7 @@ import numpy as np
 import argparse as ap
 from sklearn import linear_model as lm
 # from sklearn.preprocessing import PolynomialFeatures
-import time
+# import time
 
 # def a(trainfile, testfile, outputfile, weightfile):
 def a(ns):
@@ -116,13 +116,13 @@ def c(ns):
             # err += (1/(2*Xvk.shape[0]))*np.linalg.norm(Yvk - (Xvk @ W))
 
         err = err/10
-        # print("lambda: ", lambdas[i], "error: ", err)
+        print("lambda: ", lambdas[i], "error: ", err)
         if (err<=min_err):
             min_err = err
             min_lambda = lambdas[i]
         # print("lambda selection: ", time.time()-st)
 
-    # print(min_lambda)
+    print(min_lambda)
     
     reg = lm.LassoLars(alpha=min_lambda)
     reg.fit(X, Y.ravel())
